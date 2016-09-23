@@ -213,9 +213,8 @@ namespace FabricSample.Service
       <pubDate>Fri, 23 Sep 2016 12:02:46 +0900</pubDate>
       
       <guid>https://iwate.github.io/post/hello-world/</guid>
-      <description>
-
-&lt;p&gt;Github Pagesにブログ立ててみようかなと思って&lt;a href=&#34;https://gohugo.io/&#34;&gt;Hugo&lt;/a&gt;を使ってみてる。&lt;/p&gt;
+      <description>&lt;p&gt;Github Pagesにブログ立ててみようかなと思って&lt;a href=&#34;https://gohugo.io/&#34;&gt;Hugo&lt;/a&gt;を使ってみてる。
+&lt;/p&gt;
 
 &lt;h2 id=&#34;テーマ&#34;&gt;テーマ&lt;/h2&gt;
 
@@ -233,8 +232,7 @@ class Program
     Console.WriteLine(&amp;quot;Hello, World!&amp;quot;);
   }
 }
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>
