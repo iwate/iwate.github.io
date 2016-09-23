@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Post-rsses on //iwate.github.io</title>
+    <link>https://iwate.github.io/post/index.xml</link>
+    <description>Recent content in Post-rsses on //iwate.github.io</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <copyright>&amp;copy; &lt;a href=&#34;https://github.com/iwate&#34;&gt;iwate&lt;/a&gt; 2016</copyright>
+    <lastBuildDate>Fri, 23 Sep 2016 12:16:59 +0900</lastBuildDate>
+    <atom:link href="https://iwate.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>ReliableDictionaryの走査速度の調査</title>
+      <link>https://iwate.github.io/post/service-fabric-1/</link>
+      <pubDate>Fri, 23 Sep 2016 12:16:59 +0900</pubDate>
+      
+      <guid>https://iwate.github.io/post/service-fabric-1/</guid>
+      <description>&lt;p&gt;調査といってもそんなたいそうなことではない。
+デバッグ実行して実行時間測っただけ。&lt;br /&gt;
+アイテム数を100-&amp;gt;1000-&amp;gt;10000-&amp;gt;100000-&amp;gt;1000000と増やしていき、1カラムのフィルタリング（つまり&lt;code&gt;SELECT * FROM [DICT] WHERE &amp;lt;COLUMN_CONDITION&amp;gt;&lt;/code&gt;）にかかる時間を測る。
+&lt;/p&gt;
+
+&lt;h2 id=&#34;結果&#34;&gt;結果&lt;/h2&gt;
+
+&lt;p&gt;とりあえず結果。&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;right&#34;&gt;size&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;time[ms]&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;relative value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;right&#34;&gt;100&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.00&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;right&#34;&gt;1k&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;64&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.6&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;right&#34;&gt;10k&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;574&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;95.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;right&#34;&gt;100k&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1005&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;168&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;right&#34;&gt;1M&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5862&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;977&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://iwate.github.io/images/service-fabric-1/1.png&#34; alt=&#34;グラフ&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;なんか例外吐いてリサイクル&#34;&gt;なんか例外吐いてリサイクル&lt;/h2&gt;
+
+&lt;p&gt;一度に大量にWriteするとServiceが頻繁に例外吐いてリサイクルされる。なんじゃこりゃ。&lt;/p&gt;
+
+&lt;h3 id=&#34;system-runtime-interopservices-comexception&#34;&gt;System.Runtime.InteropServices.COMException&amp;rsquo;&lt;/h3&gt;
+
+&lt;p&gt;登録されているサービス タイプの名前が、サービス マニフェストと一致していないときに吐くらしい。&lt;/p&gt;
+
+&lt;h3 id=&#34;system-fabric-fabrictransientexception&#34;&gt;System.Fabric.FabricTransientException&lt;/h3&gt;
+
+&lt;p&gt;クォーラム損失発生した時に起こるらしい。
+以下引用&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;クォーラムの損失&lt;/strong&gt;&lt;br /&gt;
+ステートフル サービスのパーティションのレプリカの過半数がダウンした場合、そのパーティションは &amp;ldquo;クォーラム損失&amp;rdquo; と呼ばれる状態になります。 この時点で、Service Fabric はそのパーティションへの書き込み許可を停止し、パーティションの一貫性と信頼性が保たれるようにします。実際には、クライアントのデータが本当は保存されていないのに保存されたものとしてクライアントに通知されないよう、使用不可能な期間を受け入れるようになっています。管理者がそのステートフル サービスのセカンダリ レプリカからの読み取りを許可している場合、この状態の間も読み取り操作の実行を続けられることに注意してください。十分な数のレプリカが復旧するまで、またはクラスターの管理者が Repair-ServiceFabricPartition API.を使って強制的にシステムを使用できるようにするまで、パーティションはクォーラム損失状態のままになります。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;警告:
+プライマリ レプリカがダウンしたときに修復アクションを実行すると、データの損失が発生します。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;システム サービスでもクォーラム損失が発生する可能性があり、その影響は問題のあるサービスに固有です。たとえば、ネーム サービスでクォーラム損失が発生すると名前の解決に影響があり、フェールオーバー マネージャー サービスの場合は新しいサービスの作成とフェールオーバーがブロックされます。ユーザー独自のサービスとは異なり、システム サービスは &amp;ldquo;修復しない&amp;rdquo; ことをお勧めします。代わりに、単にダウンしたレプリカが復旧するまで待つことをお勧めします。&lt;br /&gt;
+&lt;a href=&#34;https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-disaster-recovery/&#34;&gt;https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-disaster-recovery/&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;所感&#34;&gt;所感&lt;/h2&gt;
+
+&lt;p&gt;Read自体は線形ですね。そりゃそうだ。ただ、かなり遅いですね。&lt;br /&gt;
+そもそも、そんなに数入れて使うもんじゃないのかなあ…&lt;/p&gt;
+
+&lt;p&gt;Readが線形なのはいいんですけど&lt;code&gt;Enumerator&lt;/code&gt;だし。それよりWriteがすごく遅いのが気になる。100万件入れるのにすごく時間がかかったので、Writeについてもうちょい調べよう。&lt;/p&gt;
+
+&lt;h2 id=&#34;使用コード&#34;&gt;使用コード&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-cs&#34;&gt;using System;
+using System.Collections.Generic;
+using System.Fabric;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.ServiceFabric.Data.Collections;
+using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Runtime;
+using System.Diagnostics;
+
+namespace FabricSample.Service
+{
+  internal sealed class Service : StatefulService
+  {
+    public Service(StatefulServiceContext context)
+      : base(context)
+    { }
+    protected override IEnumerable&amp;lt;ServiceReplicaListener&amp;gt; CreateServiceReplicaListeners()
+    {
+      return new ServiceReplicaListener[0];
+    }
+    IEnumerable&amp;lt;IEnumerable&amp;lt;T&amp;gt;&amp;gt; Div&amp;lt;T&amp;gt;(IEnumerable&amp;lt;T&amp;gt; items, int size)
+    {
+      var count = items.Count();
+      var pageMax = count / size + Math.Min(count % size, 1);
+      for(var i = 0; i &amp;lt; pageMax; i++)
+      {
+        yield return items.Skip(size * i).Take(size);
+      }
+    }
+    protected override async Task RunAsync(CancellationToken cancellationToken)
+    {
+      var collection = 
+            await this.StateManager.GetOrAddAsync&amp;lt;IReliableDictionary&amp;lt;long, Item&amp;gt;&amp;gt;(&amp;quot;SampleItems&amp;quot;);
+      var items = SampleItemsFactory.CreateItems(1000000);
+      var max = items.Count();
+      var sw = new Stopwatch();
+
+      long current = 0;
+      using (var tx = StateManager.CreateTransaction())
+      {
+        current = await collection.GetCountAsync(tx);
+      }
+      var progress = (double)current / max;
+      var size = Math.Max((int)((1- progress) * (1 - progress) * 10000), 100);
+      int count = (int)current / size;
+      
+      // 書き込んでる最中に死ぬので、
+      // リサイクルが起こるごとに書き込みサイズを小さくして前回の途中から挿入していく。
+      foreach (var _items in Div(items, size).Skip(count))
+      {
+        sw.Start();
+        using (var tx = StateManager.CreateTransaction())
+        {
+          cancellationToken.ThrowIfCancellationRequested();
+          var tasks = _items.Select(item =&amp;gt; 
+                                      collection.AddOrUpdateAsync(tx, item.Id, item, (key, old) =&amp;gt; item));
+          Task.WaitAll(tasks.ToArray());
+          await tx.CommitAsync();
+        }
+        sw.Stop();
+        ServiceEventSource
+          .Current
+          .ServiceMessage(this, $&amp;quot;Initialized {++count * size}/{max}  {sw.ElapsedMilliseconds}[ms]&amp;quot;);
+        sw.Reset();
+      }
+          
+      ServiceEventSource.Current.ServiceMessage(this, $&amp;quot;Initialized All&amp;quot;);
+
+      var today = DateTime.Today;
+      var thisweek = today.AddDays(7);
+      var list = new List&amp;lt;Item&amp;gt;();
+
+      while (true)
+      {
+        cancellationToken.ThrowIfCancellationRequested();
+        sw.Start();
+        using (var tx = StateManager.CreateTransaction())
+        {
+          var @enum = (await collection.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+          while (await @enum.MoveNextAsync(cancellationToken))
+          {
+            var item = @enum.Current.Value;
+            if (today &amp;lt;= item.DateTime &amp;amp;&amp;amp; item.DateTime &amp;lt; thisweek)
+                list.Add(item);
+          }
+        }
+        sw.Stop();
+        ServiceEventSource
+          .Current
+          .ServiceMessage(this, $&amp;quot;items.count = {list.Count}, time = {sw.ElapsedMilliseconds}[ms]&amp;quot;);
+        sw.Reset();
+        list.Clear();
+        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+      }
+    }
+  }
+}
+
+&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+    
+    <item>
+      <title>Hello World</title>
+      <link>https://iwate.github.io/post/hello-world/</link>
+      <pubDate>Fri, 23 Sep 2016 12:02:46 +0900</pubDate>
+      
+      <guid>https://iwate.github.io/post/hello-world/</guid>
+      <description>
+
+&lt;p&gt;Github Pagesにブログ立ててみようかなと思って&lt;a href=&#34;https://gohugo.io/&#34;&gt;Hugo&lt;/a&gt;を使ってみてる。&lt;/p&gt;
+
+&lt;h2 id=&#34;テーマ&#34;&gt;テーマ&lt;/h2&gt;
+
+&lt;p&gt;テーマには&lt;a href=&#34;http://themes.gohugo.io/hemingway/&#34;&gt;Hemingway&lt;/a&gt;を使ってみる。&lt;/p&gt;
+
+&lt;h2 id=&#34;コードハイライト&#34;&gt;コードハイライト&lt;/h2&gt;
+
+&lt;p&gt;Hemingwayはhighlight.jsに対応してるみたい。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-cs:hello.cs&#34;&gt;using System;
+class Program
+{
+  public static void Main(string[] args)
+  {
+    Console.WriteLine(&amp;quot;Hello, World!&amp;quot;);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

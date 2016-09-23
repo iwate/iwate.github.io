@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReliableDictionaryの走査速度の調査 | //iwate.github.io</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+
+
+<section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="subtitle is-6">September 23, 2016</h2>
+    <h1 class="title">ReliableDictionaryの走査速度の調査</h1>
+    <div class="content">
+      <p>調査といってもそんなたいそうなことではない。
+デバッグ実行して実行時間測っただけ。<br />
+アイテム数を100-&gt;1000-&gt;10000-&gt;100000-&gt;1000000と増やしていき、1カラムのフィルタリング（つまり<code>SELECT * FROM [DICT] WHERE &lt;COLUMN_CONDITION&gt;</code>）にかかる時間を測る。
+</p>
+
+<h2 id="結果">結果</h2>
+
+<p>とりあえず結果。</p>
+
+<table>
+<thead>
+<tr>
+<th align="right">size</th>
+<th align="right">time[ms]</th>
+<th align="right">relative value</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="right">100</td>
+<td align="right">6</td>
+<td align="right">1.00</td>
+</tr>
+
+<tr>
+<td align="right">1k</td>
+<td align="right">64</td>
+<td align="right">10.6</td>
+</tr>
+
+<tr>
+<td align="right">10k</td>
+<td align="right">574</td>
+<td align="right">95.7</td>
+</tr>
+
+<tr>
+<td align="right">100k</td>
+<td align="right">1005</td>
+<td align="right">168</td>
+</tr>
+
+<tr>
+<td align="right">1M</td>
+<td align="right">5862</td>
+<td align="right">977</td>
+</tr>
+</tbody>
+</table>
+
+<p><img src="/images/service-fabric-1/1.png" alt="グラフ" /></p>
+
+<h2 id="なんか例外吐いてリサイクル">なんか例外吐いてリサイクル</h2>
+
+<p>一度に大量にWriteするとServiceが頻繁に例外吐いてリサイクルされる。なんじゃこりゃ。</p>
+
+<h3 id="system-runtime-interopservices-comexception">System.Runtime.InteropServices.COMException&rsquo;</h3>
+
+<p>登録されているサービス タイプの名前が、サービス マニフェストと一致していないときに吐くらしい。</p>
+
+<h3 id="system-fabric-fabrictransientexception">System.Fabric.FabricTransientException</h3>
+
+<p>クォーラム損失発生した時に起こるらしい。
+以下引用</p>
+
+<blockquote>
+<p><strong>クォーラムの損失</strong><br />
+ステートフル サービスのパーティションのレプリカの過半数がダウンした場合、そのパーティションは &ldquo;クォーラム損失&rdquo; と呼ばれる状態になります。 この時点で、Service Fabric はそのパーティションへの書き込み許可を停止し、パーティションの一貫性と信頼性が保たれるようにします。実際には、クライアントのデータが本当は保存されていないのに保存されたものとしてクライアントに通知されないよう、使用不可能な期間を受け入れるようになっています。管理者がそのステートフル サービスのセカンダリ レプリカからの読み取りを許可している場合、この状態の間も読み取り操作の実行を続けられることに注意してください。十分な数のレプリカが復旧するまで、またはクラスターの管理者が Repair-ServiceFabricPartition API.を使って強制的にシステムを使用できるようにするまで、パーティションはクォーラム損失状態のままになります。</p>
+
+<blockquote>
+<p>警告:
+プライマリ レプリカがダウンしたときに修復アクションを実行すると、データの損失が発生します。</p>
+</blockquote>
+
+<p>システム サービスでもクォーラム損失が発生する可能性があり、その影響は問題のあるサービスに固有です。たとえば、ネーム サービスでクォーラム損失が発生すると名前の解決に影響があり、フェールオーバー マネージャー サービスの場合は新しいサービスの作成とフェールオーバーがブロックされます。ユーザー独自のサービスとは異なり、システム サービスは &ldquo;修復しない&rdquo; ことをお勧めします。代わりに、単にダウンしたレプリカが復旧するまで待つことをお勧めします。<br />
+<a href="https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-disaster-recovery/">https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-disaster-recovery/</a></p>
+</blockquote>
+
+<h2 id="所感">所感</h2>
+
+<p>Read自体は線形ですね。そりゃそうだ。ただ、かなり遅いですね。<br />
+そもそも、そんなに数入れて使うもんじゃないのかなあ…</p>
+
+<p>Readが線形なのはいいんですけど<code>Enumerator</code>だし。それよりWriteがすごく遅いのが気になる。100万件入れるのにすごく時間がかかったので、Writeについてもうちょい調べよう。</p>
+
+<h2 id="使用コード">使用コード</h2>
+
+<pre><code class="language-cs">using System;
+using System.Collections.Generic;
+using System.Fabric;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.ServiceFabric.Data.Collections;
+using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Runtime;
+using System.Diagnostics;
+
+namespace FabricSample.Service
+{
+  internal sealed class Service : StatefulService
+  {
+    public Service(StatefulServiceContext context)
+      : base(context)
+    { }
+    protected override IEnumerable&lt;ServiceReplicaListener&gt; CreateServiceReplicaListeners()
+    {
+      return new ServiceReplicaListener[0];
+    }
+    IEnumerable&lt;IEnumerable&lt;T&gt;&gt; Div&lt;T&gt;(IEnumerable&lt;T&gt; items, int size)
+    {
+      var count = items.Count();
+      var pageMax = count / size + Math.Min(count % size, 1);
+      for(var i = 0; i &lt; pageMax; i++)
+      {
+        yield return items.Skip(size * i).Take(size);
+      }
+    }
+    protected override async Task RunAsync(CancellationToken cancellationToken)
+    {
+      var collection = 
+            await this.StateManager.GetOrAddAsync&lt;IReliableDictionary&lt;long, Item&gt;&gt;(&quot;SampleItems&quot;);
+      var items = SampleItemsFactory.CreateItems(1000000);
+      var max = items.Count();
+      var sw = new Stopwatch();
+
+      long current = 0;
+      using (var tx = StateManager.CreateTransaction())
+      {
+        current = await collection.GetCountAsync(tx);
+      }
+      var progress = (double)current / max;
+      var size = Math.Max((int)((1- progress) * (1 - progress) * 10000), 100);
+      int count = (int)current / size;
+      
+      // 書き込んでる最中に死ぬので、
+      // リサイクルが起こるごとに書き込みサイズを小さくして前回の途中から挿入していく。
+      foreach (var _items in Div(items, size).Skip(count))
+      {
+        sw.Start();
+        using (var tx = StateManager.CreateTransaction())
+        {
+          cancellationToken.ThrowIfCancellationRequested();
+          var tasks = _items.Select(item =&gt; 
+                                      collection.AddOrUpdateAsync(tx, item.Id, item, (key, old) =&gt; item));
+          Task.WaitAll(tasks.ToArray());
+          await tx.CommitAsync();
+        }
+        sw.Stop();
+        ServiceEventSource
+          .Current
+          .ServiceMessage(this, $&quot;Initialized {++count * size}/{max}  {sw.ElapsedMilliseconds}[ms]&quot;);
+        sw.Reset();
+      }
+          
+      ServiceEventSource.Current.ServiceMessage(this, $&quot;Initialized All&quot;);
+
+      var today = DateTime.Today;
+      var thisweek = today.AddDays(7);
+      var list = new List&lt;Item&gt;();
+
+      while (true)
+      {
+        cancellationToken.ThrowIfCancellationRequested();
+        sw.Start();
+        using (var tx = StateManager.CreateTransaction())
+        {
+          var @enum = (await collection.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+          while (await @enum.MoveNextAsync(cancellationToken))
+          {
+            var item = @enum.Current.Value;
+            if (today &lt;= item.DateTime &amp;&amp; item.DateTime &lt; thisweek)
+                list.Add(item);
+          }
+        }
+        sw.Stop();
+        ServiceEventSource
+          .Current
+          .ServiceMessage(this, $&quot;items.count = {list.Count}, time = {sw.ElapsedMilliseconds}[ms]&quot;);
+        sw.Reset();
+        list.Clear();
+        await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+      }
+    }
+  }
+}
+
+</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+!function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+</script>
+
+
