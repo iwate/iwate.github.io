@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="ja-jp">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReliableDictionaryの走査速度の調査 | //iwate.github.io</title>
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
-
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
-
-
-<section class="section">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ReliableDictionaryの走査速度の調査 | //iwate.github.io</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
   <div class="container">
     <nav class="nav">
       <div class="nav-left">
@@ -42,12 +49,12 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <h2 class="subtitle is-6">September 23, 2016</h2>
-    <h1 class="title">ReliableDictionaryの走査速度の調査</h1>
-    <div class="content">
-      <p>調査といってもそんなたいそうなことではない。
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">September 23, 2016</h2>
+        <h1 class="title">ReliableDictionaryの走査速度の調査</h1>
+        <div class="content">
+          <p>調査といってもそんなたいそうなことではない。
 デバッグ実行して実行時間測っただけ。<br />
 アイテム数を100-&gt;1000-&gt;10000-&gt;100000-&gt;1000000と増やしていき、1カラムのフィルタリング（つまり<code>SELECT * FROM [DICT] WHERE &lt;COLUMN_CONDITION&gt;</code>）にかかる時間を測る。
 </p>
@@ -236,12 +243,12 @@ namespace FabricSample.Service
 }
 
 </code></pre>
-    </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </section>
+    
 
-
-<section class="section">
+    <section class="section">
   <div class="container has-text-centered">
     <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
   </div>
@@ -262,8 +269,5 @@ namespace FabricSample.Service
 
 <script>hljs.initHighlightingOnLoad();</script>
 
-<script>
-!function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
-</script>
-
-
+  </body>
+</html>
