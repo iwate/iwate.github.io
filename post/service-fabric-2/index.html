@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ReliableDictionaryのWrite速度の調査 | //iwate.github.io</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">September 25, 2016</h2>
+        <h1 class="title">ReliableDictionaryのWrite速度の調査</h1>
+        <div class="content">
+          <p><a href="/post/service-fabric-1">前回</a>ReliableDictionaryの走査速度を調査するときに、Writeするのがすごく遅かったので手元のMacBookと<a href="http://tryazureservicefabric.westus.cloudapp.azure.com/">Party Cluster</a>で計測した。
+</p>
+
+<h2 id="結果">結果</h2>
+
+<table>
+<thead>
+<tr>
+<th>件数</th>
+<th>Macでの所要時間[ms]</th>
+<th>PartyClusterでの所要時間[ms]</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>183</td>
+<td>191</td>
+</tr>
+
+<tr>
+<td>100</td>
+<td>306</td>
+<td>217</td>
+</tr>
+
+<tr>
+<td>1k</td>
+<td>926</td>
+<td>318</td>
+</tr>
+
+<tr>
+<td>10k</td>
+<td>10289</td>
+<td>2774</td>
+</tr>
+
+<tr>
+<td>100k</td>
+<td>122100</td>
+<td>32880</td>
+</tr>
+
+<tr>
+<td>1M</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+
+<p><img src="/images/service-fabric-2/1.png" alt="結果" /></p>
+
+<p>100万件の挿入/更新は前回と同様にサービスが途中で再起動してしまので取れてない。</p>
+
+<h2 id="考察">考察</h2>
+
+<p>まず、Party Clusterのほうが速い。Party Clusterのインスタンスは<a href="https://github.com/Azure-Samples/service-fabric-dotnet-management-party-cluster/blob/master/ARM/PartyClusterServiceTemplate.json">ARMみたかんじ</a>Standard_D1かなあ。</p>
+
+<p>でもそれはどうでもよくて、1000件くらいまでは結構すんなり入るけど、1万件になると急に時間がかかってるように見えるのが気になる。これは、Keyでソートしてるせいかな？（余談だけど、Keyの順序をランダムに挿入しても、Enumeratorで取り出すと順番に取得できる。）</p>
+
+<p>あと1件あたりの時間も気になる。1件挿入/更新するのに180[ms]かかるってのどうよ？</p>
+
+<p>あ、でも、10万件の時の所要時間を1件単位にならすと1[ms]ぐらいなのでそこまで悪くないのかもしれない。</p>
+
+<p>次のような計算をして、初期時間を省いた1件あたりにかかる時間を出してみた。</p>
+
+<blockquote>
+<p>(N件のタイム - 1件のタイム) / (N件 - 1)  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; N := 100, 1000, 10000, 100000, 100000</p>
+</blockquote>
+
+<table>
+<thead>
+<tr>
+<th>件数</th>
+<th>Macでの所要時間[ms]</th>
+<th>PartyClusterでの所要時間[ms]</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>100</td>
+<td>1.24</td>
+<td>0.262</td>
+</tr>
+
+<tr>
+<td>1k</td>
+<td>0.689</td>
+<td>0.112</td>
+</tr>
+
+<tr>
+<td>10k</td>
+<td>1.04</td>
+<td>0.273</td>
+</tr>
+
+<tr>
+<td>100k</td>
+<td>1.24</td>
+<td>0.335</td>
+</tr>
+</tbody>
+</table>
+
+<p>うん、割とそろってる気がする。ストレージ書き込みや他クラスターと調停してるわけだからこのくらいバラつきは誤差内だと思う。</p>
+
+<h2 id="まとめ">まとめ</h2>
+
+<p>トランザクションのロックかけるとこに時間がかかってる(200[ms]弱)ぽい。そりゃそうだ。</p>
+
+<p>それを差し引けば1件あたりの挿入はそんなに遅くない（250[ns]くらい）</p>
+
+<p>100万件つっこむの難しい。たぶんReliableQueueのほうはつっこめる気がするから、いったんキューイングしてから順々にReliableDictionaryに書き込むバージョンを明日試してみようと思う。</p>
+
+<h2 id="使用コード">使用コード</h2>
+
+<pre><code class="language-cs">using System;
+using System.Collections.Generic;
+using System.Fabric;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.ServiceFabric.Data.Collections;
+using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Runtime;
+using System.Runtime.Serialization;
+using System.Diagnostics;
+using Serilog;
+
+namespace StatefullCollectionSample
+{
+  [DataContract]
+  public class Sample
+  {
+    [DataMember]
+    public long Id { get; set; }
+    [DataMember]
+    public string Text { get; set; }
+    [DataMember]
+    public DateTime DateTime { get; set; }
+
+    public static IEnumerable&lt;Sample&gt; CreateSamples(int size)
+    {
+      var seed = 1024;
+      var rand = new Random(seed);
+      var anchorDate = new DateTime(2016, 1, 1).ToBinary();
+      return Enumerable.Range(1, size).Select(i =&gt; new Sample
+      {
+        Id = i,
+        Text = $&quot;Sample Text {i}&quot;,
+        DateTime = DateTime.FromBinary(anchorDate + rand.Next(-1000000, 1000000) * 3000000000)
+      }).ToList();
+    }
+  }
+  internal sealed class StatefullCollectionSample : StatefulService
+  {
+    public StatefullCollectionSample(StatefulServiceContext context)
+      : base(context)
+    { }
+
+    protected override IEnumerable&lt;ServiceReplicaListener&gt; CreateServiceReplicaListeners()
+    {
+      return new ServiceReplicaListener[0];
+    }
+    IEnumerable&lt;IEnumerable&lt;T&gt;&gt; Div&lt;T&gt;(IEnumerable&lt;T&gt; items, int size)
+    {
+      var count = items.Count();
+      var pageMax = count / size + Math.Min(count % size, 1);
+      for (var i = 0; i &lt; pageMax; i++)
+      {
+        yield return items.Skip(size * i).Take(size);
+      }
+    }
+    protected override async Task RunAsync(CancellationToken cancellationToken)
+    {
+      var log = new LoggerConfiguration().WriteTo.Logentries(&quot;&lt;API_KEY&gt;&quot;).CreateLogger();
+      var collection = await this.StateManager.GetOrAddAsync&lt;IReliableDictionary&lt;long, Sample&gt;&gt;(&quot;Samples&quot;);
+      var Samples = Sample.CreateSamples(1000000);
+      var sw = new Stopwatch();
+
+      log.Information(&quot;initialzed!&quot;);
+      while (true)
+      {
+        foreach (var size in new int[] { 1, 100, 1000, 10000, 100000, 1000000 })
+        {
+          sw.Start();
+          var samples = Samples.Take(size);
+          int unitSize = 50000, max = size / unitSize + Math.Min(size % unitSize, 1), count = 0;
+          foreach(var unit in Div(samples, unitSize))
+          {
+            cancellationToken.ThrowIfCancellationRequested();
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+              var tasks = unit.Select(s =&gt; 
+                collection.AddOrUpdateAsync(tx, s.Id, s, (key, value) =&gt; value)).ToArray();
+              Task.WaitAll(tasks);
+              await tx.CommitAsync();
+            }
+            log.Information($&quot;size={size}, progress={++count}/{max}&quot;);
+            ServiceEventSource.Current.ServiceMessage(this, $&quot;size={size}, progress={count}/{max}&quot;);
+          }
+
+          sw.Stop();
+          log.Information($&quot;Complete (size={size}, time={sw.ElapsedMilliseconds}[ms])&quot;);
+          ServiceEventSource
+            .Current
+            .ServiceMessage(this, $&quot;Complete (size={size}, time={sw.ElapsedMilliseconds}[ms])&quot;);
+          sw.Reset();
+          await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+      }
+    }
+  }
+}
+</code></pre>
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>

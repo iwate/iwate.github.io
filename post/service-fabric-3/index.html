@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ReliableConcurrentQueueを使う | //iwate.github.io</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">September 26, 2016</h2>
+        <h1 class="title">ReliableConcurrentQueueを使う</h1>
+        <div class="content">
+          <p>13日の更新で新しくPreviewになったReliableConcurrentQueueを試してみる。
+</p>
+
+<p><a href="https://blogs.msdn.microsoft.com/azureservicefabric/2016/09/13/release-of-service-fabric-sdk-2-2-207-and-runtime-5-2-207/">https://blogs.msdn.microsoft.com/azureservicefabric/2016/09/13/release-of-service-fabric-sdk-2-2-207-and-runtime-5-2-207/</a></p>
+
+<h2 id="reliablequeueとの違い">ReliableQueueとの違い</h2>
+
+<p>ReliableConcurrentQueueはFirst In First Outの順序がベストエフォートになっており、ReliableQueueのように厳密ではない分、複数のConsumerとProducerが同時実行できるようになっているようです。</p>
+
+<h2 id="コード">コード</h2>
+
+<pre><code class="language-cs">using Microsoft.ServiceFabric.Data.Collections.Preview;
+var queue = await this.StateManager.GetOrAddAsync&lt;IReliableConcurrentQueue&lt;string&gt;&gt;(&quot;myQueue&quot;);
+var count = queue.Count; // プロパティでカウントがとれる
+</code></pre>
+
+<p>ReliableQueueとはインターフェースが若干違い、カウントをとるのは<code>GetCountAsync</code>メソッドではなく<code>Count</code>プロパティでとれるようになっています。また、<code>TryPeekAsync</code>メソッドはなくピーク処理（削除なしに先頭を読む）はできなくなっています。</p>
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
