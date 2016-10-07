@@ -7,8 +7,90 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/iwate&#34;&gt;iwate&lt;/a&gt; 2016</copyright>
-    <lastBuildDate>Mon, 26 Sep 2016 12:49:42 +0900</lastBuildDate>
+    <lastBuildDate>Fri, 07 Oct 2016 13:11:59 +0900</lastBuildDate>
     <atom:link href="https://iwate.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>好みのjs frontほにゃららを探して１</title>
+      <link>https://iwate.github.io/post/js-framework-1/</link>
+      <pubDate>Fri, 07 Oct 2016 13:11:59 +0900</pubDate>
+      
+      <guid>https://iwate.github.io/post/js-framework-1/</guid>
+      <description>&lt;p&gt;仕事はECのプラットフォームの作成なので、やっぱりWEB。そうするとReact+Flux/ReduxやらAngularやらの話はやっぱり敏感になるのだけれど、多くの人と同様に「これは未来だ！」と感動したり、躓いては「これはなんか違う」って思ってる。
+色々試してみて、全部に共通してると感じたのは&lt;strong&gt;コンポーネント&lt;/strong&gt;を作ってパーツ化して再利用しやすくするということ。これは大賛成。 でもまだやっぱりしっくりこないなあと思っているので原因を考えてみる。
+&lt;/p&gt;
+
+&lt;h2 id=&#34;一番しっくりきたのはriot-js&#34;&gt;一番しっくりきたのはRiot.js&lt;/h2&gt;
+
+&lt;p&gt;React+Flux/Redux, Angular2, WebComponents+Polymer, Riot.jsを試してみて一番しっくりきたのはRiot.jsだった。WebComponents+Polymerもよかったけど、少し遅いしまだ早いと思った。もしこれがブラウザネイティブになるなら喜んで使うけど。
+React+Flux/Reduxは初めて試したときはとても感動した。Reduxなんかとくに。Pureな関数だけを実装することで状態を制御して、それゆえに見通しが良くなるのがすごくいい。 ただやっぱりJSXはなれなかった。
+Angular2はすべてががっちり固まってるのがつかれる。Reactと違ってテンプレート使えるのは受け入れやすかったけど。&lt;/p&gt;
+
+&lt;p&gt;そこでRiot.js。Riot.jsは軽量だし、WebComponentsをいい感じに実現できるしVirtualDOMで今っぽくてよかった。&lt;/p&gt;
+
+&lt;p&gt;Riot.jsでカスタムタグを作るとこんな感じ。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;custom-tag&amp;gt;
+  &amp;lt;h1 onclick={changeMsg}&amp;gt;{message}&amp;lt;/h1&amp;gt;
+
+  &amp;lt;script&amp;gt;
+    this.message = &amp;quot;Hello, World!&amp;quot;;
+    this.changeMsg = function(){
+      this.message = &amp;quot;Hello, Riot.js&amp;quot;;
+      this.update();
+    }
+  &amp;lt;/script&amp;gt;
+&amp;lt;/custom-tag&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;riot-js最高って考えてた時期もありました&#34;&gt;Riot.js最高って考えてた時期もありました。&lt;/h2&gt;
+
+&lt;p&gt;そう。最高って思ってた。でも次のいくつか問題にあたってからは「おしいなあ」って気持ちしかない。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;カスタムタグのネストがつらい&lt;/li&gt;
+&lt;li&gt;他のJSライブライリとの相性の悪さ&lt;/li&gt;
+&lt;li&gt;ifの値falseでもレンダリングが走る&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;まず、カスタムタグのネストがつらいと感じた。できるんだけどおしい。例えば次のようなにHTMLをかいてレンダリングすることを考えてみる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;custom-tag1&amp;gt;
+  &amp;lt;custom-tag2&amp;gt;
+    &amp;lt;custom-tag3/&amp;gt;
+  &amp;lt;/custom-tag2&amp;gt;
+&amp;lt;/custom-tag1&amp;gt;
+&amp;lt;script&amp;gt;
+  riot.render(&#39;*&#39;);
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;この書き方自体はうまくいくし描画もされるのだけれど、custom-tag3は3回描画されます。 ちなみにcustom-tag2は2回、custom-tag1は1回です。それぞれ1回ずつ描画されることを期待しますけどそうじゃないんですよね。
+これは&lt;code&gt;riot.render(&#39;*&#39;)&lt;/code&gt;が良くないとも言えますが、まあそこは掘り下げず、3回呼ばれるとまずい場合があるのかということから。&lt;/p&gt;
+
+&lt;p&gt;ネスト回数分だけレンダリングが走ってしまうと、AJAXなどで外部からデータをロードするようなタグがこまる。ネスト回数分おんなじリクエスト飛ばすんかい！？ってなっちゃう。（そんなタグを作るでない！とも言える）&lt;/p&gt;
+
+&lt;p&gt;2つ目の他のJSライブライリとの相性の悪さってのも1つ目のやつに起因しているのだけれど、何回も初期化コードが走ってほしくないものがある。例えば、エディタ系。 monaco-editorをタグ化したのだけれど、monaco-editorはDOMを内部で生成するからネスト回数分エディターが作られちゃう。&lt;/p&gt;
+
+&lt;p&gt;3つ目は、次のようなコードをレンダリングさせたとき、custom2の方もレンダリング処理が走るということ。もちろん、custom2のif条件はfalseなので描画はされないが、custom-tagのレンダリング処理は実行されるので、無駄な処理が走る。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;custom-tag id=&amp;quot;custom1&amp;quot; if={true} /&amp;gt;
+&amp;lt;custom-tag id=&amp;quot;custom2&amp;quot; if={false} /&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;つまり、Riot.jsは今はあまりネストしないほうがいいし、ajaxするようなコードは書かないほうがいいし、DOMが生成される既存の外部ライブラリを含めないほうがいいし、もちろん思い処理は含めないほうがいい。
+でもこれってしたいよね。特にajaxとか。指定のJSONをロードするselect-boxとか作りたいじゃん？&lt;/p&gt;
+
+&lt;h2 id=&#34;ajaxコールって関数じゃなくてやっぱりオブジェクトだよね&#34;&gt;Ajaxコールって関数じゃなくてやっぱりオブジェクトだよね。&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;fetch&lt;/code&gt;とか&lt;code&gt;$.ajax&lt;/code&gt;とか使いやすいし、今までなんとなくこっちのほうが、&lt;code&gt;XMLHttpRequst&lt;/code&gt;よりもあるべき姿と漠然と思ってた。だけど、やっぱり通信って状態から縁を切れないよね。そうするとreduxみたいにmiddlewareの中に押し込むのどうなんだろう？って感じた。&lt;/p&gt;
+
+&lt;p&gt;じゃあリクエストをストアにためるのはどうかというと、状態を自己改変するからreduxだと扱えない（扱うべきでない）のかなと。そしたらやっぱりmiddlewareに落ち着くよね。&lt;/p&gt;
+
+&lt;h2 id=&#34;もう文章グダグダだけど&#34;&gt;もう文章グダグダだけど&lt;/h2&gt;
+
+&lt;p&gt;そんなこんなで、しっくりくる実装を今日も考えてる。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>ReliableConcurrentQueueを使う</title>

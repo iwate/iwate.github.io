@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>好みのjs frontほにゃららを探して１ | //iwate.github.io</title>
+    
+    <meta name="description" content="仕事はECのプラットフォームの作成なので、やっぱりWEB。そうするとReact&#43;Flux/ReduxやらAngularやらの話はやっぱり敏感になるのだけれど、多くの人と同様に「これは未来だ！」と感動したり、躓いては「これはなんか違う」って思ってる。 色々試してみて、全部に共通してると感じたのはコンポーネントを作ってパーツ化して再利用しやすくするということ。これは大賛成。 でもまだやっぱりしっくりこないなあと思っているので原因を考えてみる。 " />
+    <meta name="keywords" content="" />
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">October 7, 2016</h2>
+        <h1 class="title">好みのjs frontほにゃららを探して１</h1>
+        <div class="content">
+          <p>仕事はECのプラットフォームの作成なので、やっぱりWEB。そうするとReact+Flux/ReduxやらAngularやらの話はやっぱり敏感になるのだけれど、多くの人と同様に「これは未来だ！」と感動したり、躓いては「これはなんか違う」って思ってる。
+色々試してみて、全部に共通してると感じたのは<strong>コンポーネント</strong>を作ってパーツ化して再利用しやすくするということ。これは大賛成。 でもまだやっぱりしっくりこないなあと思っているので原因を考えてみる。
+</p>
+
+<h2 id="一番しっくりきたのはriot-js">一番しっくりきたのはRiot.js</h2>
+
+<p>React+Flux/Redux, Angular2, WebComponents+Polymer, Riot.jsを試してみて一番しっくりきたのはRiot.jsだった。WebComponents+Polymerもよかったけど、少し遅いしまだ早いと思った。もしこれがブラウザネイティブになるなら喜んで使うけど。
+React+Flux/Reduxは初めて試したときはとても感動した。Reduxなんかとくに。Pureな関数だけを実装することで状態を制御して、それゆえに見通しが良くなるのがすごくいい。 ただやっぱりJSXはなれなかった。
+Angular2はすべてががっちり固まってるのがつかれる。Reactと違ってテンプレート使えるのは受け入れやすかったけど。</p>
+
+<p>そこでRiot.js。Riot.jsは軽量だし、WebComponentsをいい感じに実現できるしVirtualDOMで今っぽくてよかった。</p>
+
+<p>Riot.jsでカスタムタグを作るとこんな感じ。</p>
+
+<pre><code>&lt;custom-tag&gt;
+  &lt;h1 onclick={changeMsg}&gt;{message}&lt;/h1&gt;
+
+  &lt;script&gt;
+    this.message = &quot;Hello, World!&quot;;
+    this.changeMsg = function(){
+      this.message = &quot;Hello, Riot.js&quot;;
+      this.update();
+    }
+  &lt;/script&gt;
+&lt;/custom-tag&gt;
+</code></pre>
+
+<h2 id="riot-js最高って考えてた時期もありました">Riot.js最高って考えてた時期もありました。</h2>
+
+<p>そう。最高って思ってた。でも次のいくつか問題にあたってからは「おしいなあ」って気持ちしかない。</p>
+
+<ul>
+<li>カスタムタグのネストがつらい</li>
+<li>他のJSライブライリとの相性の悪さ</li>
+<li>ifの値falseでもレンダリングが走る</li>
+</ul>
+
+<p>まず、カスタムタグのネストがつらいと感じた。できるんだけどおしい。例えば次のようなにHTMLをかいてレンダリングすることを考えてみる。</p>
+
+<pre><code>&lt;custom-tag1&gt;
+  &lt;custom-tag2&gt;
+    &lt;custom-tag3/&gt;
+  &lt;/custom-tag2&gt;
+&lt;/custom-tag1&gt;
+&lt;script&gt;
+  riot.render('*');
+&lt;/script&gt;
+</code></pre>
+
+<p>この書き方自体はうまくいくし描画もされるのだけれど、custom-tag3は3回描画されます。 ちなみにcustom-tag2は2回、custom-tag1は1回です。それぞれ1回ずつ描画されることを期待しますけどそうじゃないんですよね。
+これは<code>riot.render('*')</code>が良くないとも言えますが、まあそこは掘り下げず、3回呼ばれるとまずい場合があるのかということから。</p>
+
+<p>ネスト回数分だけレンダリングが走ってしまうと、AJAXなどで外部からデータをロードするようなタグがこまる。ネスト回数分おんなじリクエスト飛ばすんかい！？ってなっちゃう。（そんなタグを作るでない！とも言える）</p>
+
+<p>2つ目の他のJSライブライリとの相性の悪さってのも1つ目のやつに起因しているのだけれど、何回も初期化コードが走ってほしくないものがある。例えば、エディタ系。 monaco-editorをタグ化したのだけれど、monaco-editorはDOMを内部で生成するからネスト回数分エディターが作られちゃう。</p>
+
+<p>3つ目は、次のようなコードをレンダリングさせたとき、custom2の方もレンダリング処理が走るということ。もちろん、custom2のif条件はfalseなので描画はされないが、custom-tagのレンダリング処理は実行されるので、無駄な処理が走る。</p>
+
+<pre><code>&lt;custom-tag id=&quot;custom1&quot; if={true} /&gt;
+&lt;custom-tag id=&quot;custom2&quot; if={false} /&gt;
+</code></pre>
+
+<p>つまり、Riot.jsは今はあまりネストしないほうがいいし、ajaxするようなコードは書かないほうがいいし、DOMが生成される既存の外部ライブラリを含めないほうがいいし、もちろん思い処理は含めないほうがいい。
+でもこれってしたいよね。特にajaxとか。指定のJSONをロードするselect-boxとか作りたいじゃん？</p>
+
+<h2 id="ajaxコールって関数じゃなくてやっぱりオブジェクトだよね">Ajaxコールって関数じゃなくてやっぱりオブジェクトだよね。</h2>
+
+<p><code>fetch</code>とか<code>$.ajax</code>とか使いやすいし、今までなんとなくこっちのほうが、<code>XMLHttpRequst</code>よりもあるべき姿と漠然と思ってた。だけど、やっぱり通信って状態から縁を切れないよね。そうするとreduxみたいにmiddlewareの中に押し込むのどうなんだろう？って感じた。</p>
+
+<p>じゃあリクエストをストアにためるのはどうかというと、状態を自己改変するからreduxだと扱えない（扱うべきでない）のかなと。そしたらやっぱりmiddlewareに落ち着くよね。</p>
+
+<h2 id="もう文章グダグダだけど">もう文章グダグダだけど</h2>
+
+<p>そんなこんなで、しっくりくる実装を今日も考えてる。</p>
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
