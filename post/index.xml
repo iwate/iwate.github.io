@@ -7,8 +7,59 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/iwate&#34;&gt;iwate&lt;/a&gt; 2016</copyright>
-    <lastBuildDate>Fri, 07 Oct 2016 13:11:59 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 01 Nov 2016 22:06:54 +0900</lastBuildDate>
     <atom:link href="https://iwate.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Service Fabric Local Clusterのリバースプロキシのポートは19081|19083|19085|19087|19089</title>
+      <link>https://iwate.github.io/post/service-fabric-4/</link>
+      <pubDate>Tue, 01 Nov 2016 22:06:54 +0900</pubDate>
+      
+      <guid>https://iwate.github.io/post/service-fabric-4/</guid>
+      <description>&lt;p&gt;書きたい内容はたいとるそのまんまです。Service Fabricにはリバースプロキシがあり、アプリケーション名でノードのIPを引けるようになっています。
+Local Clusterにおけるリバースプロキシはデフォルト設定(v2.3.301)では19081、19083、19085、19087、もしくは、19089です。
+1Nodeで動かしてるなら19801です。
+&lt;/p&gt;
+
+&lt;h2 id=&#34;リバースプロキシ&#34;&gt;リバースプロキシ&lt;/h2&gt;
+
+&lt;p&gt;詳しくは→&lt;a href=&#34;https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-reverseproxy/&#34;&gt;Reverse Proxy&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-getting-started/tree/master/Services/WordCount&#34;&gt;サンプルのWordCount&lt;/a&gt;では&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-getting-started/blob/master/Services/WordCount/WordCount.WebService/PackageRoot/ServiceManifest.xml&#34;&gt;ServiceManifest&lt;/a&gt;で起動するポートを指定していますが、Service Fabricを使っているなら、一つのアプリケーションバイナリをデプロイしておいて、&lt;a href=&#34;https://msdn.microsoft.com/en-us/library/azure/dn707676.aspx&#34;&gt;テナントごとにアプリケーションを作る&lt;/a&gt;、マルチテナント向きな使い方をしたいところです。
+それには、ポートが固定されていては困るので、ダイナミックにポートを割り当ててリバースプロキシ経由でアクセスするときれいです。&lt;/p&gt;
+
+&lt;p&gt;例えば、下図のようにアプリケーションが展開されているとします。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://iwate.github.io/images/service-fabric-4/applications.png&#34; alt=&#34;Applications&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;リバースプロキシ(&lt;a href=&#34;http://localhost:19081)にサービスのURIから`fabric:`以下を問い合わせると目当てのサービスに到達できます。&#34;&gt;http://localhost:19081)にサービスのURIから`fabric:`以下を問い合わせると目当てのサービスに到達できます。&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://iwate.github.io/images/service-fabric-4/wordcount.png&#34; alt=&#34;WordCount&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;うーん。いいですね！(๑╹ڡ╹๑)&lt;/p&gt;
+
+&lt;h2 id=&#34;19081から変えたい&#34;&gt;19081から変えたい&lt;/h2&gt;
+
+&lt;p&gt;デフォルト設定から別のポートへ変更したい場合は&lt;code&gt;C:\SfDevCluster\Data\clusterManifest.xml&lt;/code&gt;を編集します。
+&lt;code&gt;HttpApplicationGatewayEndpoint&lt;/code&gt;の&lt;code&gt;Port属性&lt;/code&gt;を好みに編集しましょう。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;clusterManifest
+  ...
+  &amp;lt;NodeTypes&amp;gt;
+    &amp;lt;NodeType Name=&amp;quot;NodeType0&amp;quot;&amp;gt;
+      &amp;lt;Endpoints&amp;gt;
+        ...
+        &amp;lt;HttpApplicationGatewayEndpoint Port=&amp;quot;19081&amp;quot; Protocol=&amp;quot;http&amp;quot; /&amp;gt;
+        ...
+    ...
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;本番環境&#34;&gt;本番環境&lt;/h2&gt;
+
+&lt;p&gt;まず、&lt;a href=&#34;https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-reverseproxy/#_-4&#34;&gt;リバースプロキシを有効にします&lt;/a&gt;。
+AzureにService Fabric Clusterを作成した場合、19008(もしくは設定したポート)にアクセスすればApplication Gatewayが動いてるノードで引いてくれます。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>好みのjs frontほにゃららを探して１</title>

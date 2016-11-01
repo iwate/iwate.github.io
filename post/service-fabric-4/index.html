@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service Fabric Local Clusterのリバースプロキシのポートは19081|19083|19085|19087|19089 | //iwate.github.io</title>
+    
+    <meta name="description" content="書きたい内容はたいとるそのまんまです。Service Fabricにはリバースプロキシがあり、アプリケーション名でノードのIPを引けるようになっています。 Local Clusterにおけるリバースプロキシはデフォルト設定(v2.3.301)では19081、19083、19085、19087、もしくは、19089です。 1Nodeで動かしてるなら19801です。 " />
+    <meta name="keywords" content="service fabric,local cluster" />
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">November 1, 2016</h2>
+        <h1 class="title">Service Fabric Local Clusterのリバースプロキシのポートは19081|19083|19085|19087|19089</h1>
+        <div class="content">
+          <p>書きたい内容はたいとるそのまんまです。Service Fabricにはリバースプロキシがあり、アプリケーション名でノードのIPを引けるようになっています。
+Local Clusterにおけるリバースプロキシはデフォルト設定(v2.3.301)では19081、19083、19085、19087、もしくは、19089です。
+1Nodeで動かしてるなら19801です。
+</p>
+
+<h2 id="リバースプロキシ">リバースプロキシ</h2>
+
+<p>詳しくは→<a href="https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-reverseproxy/">Reverse Proxy</a></p>
+
+<p><a href="https://github.com/Azure-Samples/service-fabric-dotnet-getting-started/tree/master/Services/WordCount">サンプルのWordCount</a>では<a href="https://github.com/Azure-Samples/service-fabric-dotnet-getting-started/blob/master/Services/WordCount/WordCount.WebService/PackageRoot/ServiceManifest.xml">ServiceManifest</a>で起動するポートを指定していますが、Service Fabricを使っているなら、一つのアプリケーションバイナリをデプロイしておいて、<a href="https://msdn.microsoft.com/en-us/library/azure/dn707676.aspx">テナントごとにアプリケーションを作る</a>、マルチテナント向きな使い方をしたいところです。
+それには、ポートが固定されていては困るので、ダイナミックにポートを割り当ててリバースプロキシ経由でアクセスするときれいです。</p>
+
+<p>例えば、下図のようにアプリケーションが展開されているとします。</p>
+
+<p><img src="/images/service-fabric-4/applications.png" alt="Applications" /></p>
+
+<p>リバースプロキシ(<a href="http://localhost:19081)にサービスのURIから`fabric:`以下を問い合わせると目当てのサービスに到達できます。">http://localhost:19081)にサービスのURIから`fabric:`以下を問い合わせると目当てのサービスに到達できます。</a></p>
+
+<p><img src="/images/service-fabric-4/wordcount.png" alt="WordCount" /></p>
+
+<p>うーん。いいですね！(๑╹ڡ╹๑)</p>
+
+<h2 id="19081から変えたい">19081から変えたい</h2>
+
+<p>デフォルト設定から別のポートへ変更したい場合は<code>C:\SfDevCluster\Data\clusterManifest.xml</code>を編集します。
+<code>HttpApplicationGatewayEndpoint</code>の<code>Port属性</code>を好みに編集しましょう。</p>
+
+<pre><code>&lt;clusterManifest
+  ...
+  &lt;NodeTypes&gt;
+    &lt;NodeType Name=&quot;NodeType0&quot;&gt;
+      &lt;Endpoints&gt;
+        ...
+        &lt;HttpApplicationGatewayEndpoint Port=&quot;19081&quot; Protocol=&quot;http&quot; /&gt;
+        ...
+    ...
+  ...
+</code></pre>
+
+<h2 id="本番環境">本番環境</h2>
+
+<p>まず、<a href="https://azure.microsoft.com/ja-jp/documentation/articles/service-fabric-reverseproxy/#_-4">リバースプロキシを有効にします</a>。
+AzureにService Fabric Clusterを作成した場合、19008(もしくは設定したポート)にアクセスすればApplication Gatewayが動いてるノードで引いてくれます。</p>
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>
