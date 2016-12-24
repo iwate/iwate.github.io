@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service Fabric Performance and Scalability samplesの結果を見る | //iwate.github.io</title>
+    
+    <meta name="description" content="これはAzure AdventCalender 24日目です。 今回は、Service Fabric Performance and Scalability samplesを実行してみて、その結果を見てみたいと思います。
+Service Fabric Performance and Scalability samples Service Fabricのサンプルの一つで、最近出ました。このサンプルでは、Reliable DictionaryとActorのそれぞれReadWriteの時間を計測できます。 今回は、Reliable Dictionaryを計測します。
+この計測の流れは、クライアントがLoadDriverと呼ばれるサービスに計測リクエストをなげて、LoadDriverがSatefullServiceとのやり取りを行って計測して、結果をクライアントが受け取るというコードになってます。
+このサンプルで面白いなと思ったのは、WcfCommunicationListenerを使ってFabricClientがサービスとやり取りをしているところです。 WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&hellip;」って思ったのですが、なるほどこんな風に使うんですね。
+計測環境 次の2つの環境で計測しました。
+    SF Version CPU Memory Nodes Machines Partitions     Local1  Intel® core™ i5-6500 @ 3.2 GHz 16GB 5 1 1   Local2  Intel® core™ i5-6500 @ 3.2 GHz 16GB 5 1 4   Cloud  Intel® Xeon™ E5-2673 v3 @ 2." />
+    <meta name="keywords" content="service fabric,performance" />
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/solarized-light.min.css">
+    
+    
+    <script>
+    !function(a,b,c,d,e,f,g){a.GoogleAnalyticsObject=e,a[e]=a[e]||function(){(a[e].q=a[e].q||[]).push(arguments)},a[e].l=1*new Date,f=b.createElement(c),g=b.getElementsByTagName(c)[0],f.async=1,f.src=d,g.parentNode.insertBefore(f,g)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-84669120-1","auto"),ga("send","pageview");
+    </script>
+    
+  </head>
+  <body>
+    <section class="section">
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-left">
+        <a class="nav-item" href="https://iwate.github.io/"><h1 class="title is-4">//iwate.github.io</h1></a>
+      </div>
+      <div class="nav-right">
+        <nav class="nav-item level is-mobile">
+          
+          <a class="level-item" href="https://github.com/iwate">
+            <span class="icon">
+              <i class="fa fa-github"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="https://twitter.com/_iwate">
+            <span class="icon">
+              <i class="fa fa-twitter"></i>
+            </span>
+          </a>
+          
+          <a class="level-item" href="/index.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+          </a>
+          
+        </nav>
+      </div>
+    </nav>
+  </div>
+</section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="subtitle is-6">December 23, 2016</h2>
+        <h1 class="title">Service Fabric Performance and Scalability samplesの結果を見る</h1>
+        <div class="content">
+          
+
+<p>これはAzure AdventCalender 24日目です。
+今回は、<a href="https://github.com/Azure-Samples/service-fabric-dotnet-performance">Service Fabric Performance and Scalability samples</a>を実行してみて、その結果を見てみたいと思います。</p>
+
+<h2 id="service-fabric-performance-and-scalability-samples">Service Fabric Performance and Scalability samples</h2>
+
+<p>Service Fabricのサンプルの一つで、最近出ました。このサンプルでは、Reliable DictionaryとActorのそれぞれReadWriteの時間を計測できます。
+今回は、Reliable Dictionaryを計測します。</p>
+
+<p>この計測の流れは、クライアントがLoadDriverと呼ばれるサービスに計測リクエストをなげて、LoadDriverがSatefullServiceとのやり取りを行って計測して、結果をクライアントが受け取るというコードになってます。</p>
+
+<p>このサンプルで面白いなと思ったのは、<code>WcfCommunicationListener</code>を使って<code>FabricClient</code>がサービスとやり取りをしているところです。
+WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&hellip;」って思ったのですが、なるほどこんな風に使うんですね。</p>
+
+<h2 id="計測環境">計測環境</h2>
+
+<p>次の2つの環境で計測しました。</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th>SF Version</th>
+<th>CPU</th>
+<th>Memory</th>
+<th>Nodes</th>
+<th>Machines</th>
+<th>Partitions</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Local1</td>
+<td></td>
+<td>Intel® core™ i5-6500 @ 3.2 GHz</td>
+<td>16GB</td>
+<td>5</td>
+<td>1</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Local2</td>
+<td></td>
+<td>Intel® core™ i5-6500 @ 3.2 GHz</td>
+<td>16GB</td>
+<td>5</td>
+<td>1</td>
+<td>4</td>
+</tr>
+
+<tr>
+<td>Cloud</td>
+<td></td>
+<td>Intel® Xeon™ E5-2673 v3 @ 2.4 GHz</td>
+<td>4GB</td>
+<td>5</td>
+<td>5</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+
+<p>Cloudの方は最近出た<code>A2_v2</code>インスタンスです。 Localでは、Reliable DicrionaryのPartitionsサイズを1とCore数分の二つで計測してみました。(計測を始めるとCPUが100%に張り付くのが気になったので)</p>
+
+<p>Cloudはデフォの6のままです。</p>
+
+<p>パラメータは次のように設定しました。</p>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="right">Value</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left">NumWriteOperationsTotal</td>
+<td align="right">262144</td>
+<td align="left">Total number of write operations to be performed on the service.</td>
+</tr>
+
+<tr>
+<td align="left">NumOutstandingWriteOperations</td>
+<td align="right">64</td>
+<td align="left">Number of write operations sent to the service at any given time.</td>
+</tr>
+
+<tr>
+<td align="left">NumReadOperationsTotal</td>
+<td align="right">524288</td>
+<td align="left">Total number of read operations to be performed on the service.</td>
+</tr>
+
+<tr>
+<td align="left">NumOutstandingReadOperations</td>
+<td align="right">16</td>
+<td align="left">Number of read operations sent to the service at any given time.</td>
+</tr>
+
+<tr>
+<td align="left">OperationDataSizeInBytes</td>
+<td align="right">1024</td>
+<td align="left">Size in bytes of the data associated with each operation (i.e. read or write) performed on the service.</td>
+</tr>
+
+<tr>
+<td align="left">NumItems</td>
+<td align="right">2048</td>
+<td align="left">Number of items (e.g. number of rows in a table) that the operations are distributed across in the service.</td>
+</tr>
+
+<tr>
+<td align="left">NumClients</td>
+<td align="right">1</td>
+<td align="left">Number of clients used to perform the operations on the service.</td>
+</tr>
+</tbody>
+</table>
+
+<p>NumOutstandingWriteOperations が64の場合、64個のタスクが生成されて並行に操作がNumWriteOperationsTotal回実行されます。Readのほうもしかり。</p>
+
+<h2 id="計測結果">計測結果</h2>
+
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th>Test Case</th>
+<th align="right">Time</th>
+<th align="right">Operations</th>
+<th align="right">ava. Operaions [ope/sec]</th>
+<th align="right">ava. Operation Latency [ms]</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left">Local1</td>
+<td>Write</td>
+<td align="right">00:01:45.9455085</td>
+<td align="right">262144</td>
+<td align="right">2474.32858373604</td>
+<td align="right">25.8481560119629</td>
+</tr>
+
+<tr>
+<td align="left">Local1</td>
+<td>Read</td>
+<td align="right">00:01:04.9925570</td>
+<td align="right">524288</td>
+<td align="right">8066.89295206527</td>
+<td align="right">1.9822887878418</td>
+</tr>
+
+<tr>
+<td align="left">Local2</td>
+<td>Write</td>
+<td align="right">00:02:33.0721881</td>
+<td align="right">262144</td>
+<td align="right">2474.32858373604</td>
+<td align="right">37.3323948471069</td>
+</tr>
+
+<tr>
+<td align="left">Local2</td>
+<td>Read</td>
+<td align="right">00:01:27.1474273</td>
+<td align="right">524288</td>
+<td align="right">6016.10416100029</td>
+<td align="right">2.65598070163727</td>
+</tr>
+
+<tr>
+<td align="left">Cloud</td>
+<td>Write</td>
+<td align="right">00:04:04.4822671</td>
+<td align="right">262144</td>
+<td align="right">1072.24136584424</td>
+<td align="right">59.5640092216492</td>
+</tr>
+
+<tr>
+<td align="left">Cloud</td>
+<td>Read</td>
+<td align="right">00:03:24.7382677</td>
+<td align="right">524288</td>
+<td align="right">2560.7718864176</td>
+<td align="right">6.24372196731567</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="考察">考察</h2>
+
+<p>これから、友達と鍋パなので手短に！
+Local2がLocal1より時間かかったのはやっぱり、マシン一台なのにパーティション切ったのがいけないかなと。
+全体的にやっぱり、書き込みが遅いですね。<a href="https://iwate.github.io/post/service-fabric-2/">前に計測したとき</a>はヘッダに時間がかかってそうで、１件ずつとかかなり遅いって感じでした。
+今回のサンプルでは最初の一件目にどれだけかかってるか出てないし、クラスタのVMSizeが異なるので素直に比較はできませんが、100k件が32880[ms]だったので、</p>
+
+<p>32880 * 2.62144 = 86192.9472 = 00:01:26.1929472</p>
+
+<p>という感じでしょうか。今回は、リバースプロキシなどを経由している点を考慮すると前回とった結果とあんまり変わらなさそうです。</p>
+
+<p>Cloudですごく結果が悪く見えます。Av2のCPUはDv2と同じなので、メモリかネットワークですかね。Localの時みたいにPatitionが分かれすぎってのもあるかも。</p>
+
+<p>今、Reliable Collection回りは中の人が頑張って書き直しいるそうなので（ほんとか？）、SDK上がるたびに計測できるようにいい感じの計測サービスを準備しておきたい今日この頃です。</p>
+
+<p>以上！結果書いただけかよ！って感じですが２４日目でした！</p>
+
+        </div>
+      </div>
+    </section>
+    
+
+    <section class="section">
+  <div class="container has-text-centered">
+    <p>&copy; <a href="https://github.com/iwate">iwate</a> 2016</p>
+  </div>
+</section>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/cs.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/go.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/html.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/js.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/css.min.js"></script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/languages/ps.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>

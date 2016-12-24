@@ -7,8 +7,231 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
     <copyright>&amp;copy; &lt;a href=&#34;https://github.com/iwate&#34;&gt;iwate&lt;/a&gt; 2016</copyright>
-    <lastBuildDate>Tue, 01 Nov 2016 22:06:54 +0900</lastBuildDate>
+    <lastBuildDate>Fri, 23 Dec 2016 19:00:59 +0900</lastBuildDate>
     <atom:link href="https://iwate.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Service Fabric Performance and Scalability samplesの結果を見る</title>
+      <link>https://iwate.github.io/post/service-fabric-5/</link>
+      <pubDate>Fri, 23 Dec 2016 19:00:59 +0900</pubDate>
+      
+      <guid>https://iwate.github.io/post/service-fabric-5/</guid>
+      <description>
+
+&lt;p&gt;これはAzure AdventCalender 24日目です。
+今回は、&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-performance&#34;&gt;Service Fabric Performance and Scalability samples&lt;/a&gt;を実行してみて、その結果を見てみたいと思います。&lt;/p&gt;
+
+&lt;h2 id=&#34;service-fabric-performance-and-scalability-samples&#34;&gt;Service Fabric Performance and Scalability samples&lt;/h2&gt;
+
+&lt;p&gt;Service Fabricのサンプルの一つで、最近出ました。このサンプルでは、Reliable DictionaryとActorのそれぞれReadWriteの時間を計測できます。
+今回は、Reliable Dictionaryを計測します。&lt;/p&gt;
+
+&lt;p&gt;この計測の流れは、クライアントがLoadDriverと呼ばれるサービスに計測リクエストをなげて、LoadDriverがSatefullServiceとのやり取りを行って計測して、結果をクライアントが受け取るというコードになってます。&lt;/p&gt;
+
+&lt;p&gt;このサンプルで面白いなと思ったのは、&lt;code&gt;WcfCommunicationListener&lt;/code&gt;を使って&lt;code&gt;FabricClient&lt;/code&gt;がサービスとやり取りをしているところです。
+WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&amp;hellip;」って思ったのですが、なるほどこんな風に使うんですね。&lt;/p&gt;
+
+&lt;h2 id=&#34;計測環境&#34;&gt;計測環境&lt;/h2&gt;
+
+&lt;p&gt;次の2つの環境で計測しました。&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;SF Version&lt;/th&gt;
+&lt;th&gt;CPU&lt;/th&gt;
+&lt;th&gt;Memory&lt;/th&gt;
+&lt;th&gt;Nodes&lt;/th&gt;
+&lt;th&gt;Machines&lt;/th&gt;
+&lt;th&gt;Partitions&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Local1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;Intel® core™ i5-6500 @ 3.2 GHz&lt;/td&gt;
+&lt;td&gt;16GB&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Local2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;Intel® core™ i5-6500 @ 3.2 GHz&lt;/td&gt;
+&lt;td&gt;16GB&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Cloud&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;Intel® Xeon™ E5-2673 v3 @ 2.4 GHz&lt;/td&gt;
+&lt;td&gt;4GB&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Cloudの方は最近出た&lt;code&gt;A2_v2&lt;/code&gt;インスタンスです。 Localでは、Reliable DicrionaryのPartitionsサイズを1とCore数分の二つで計測してみました。(計測を始めるとCPUが100%に張り付くのが気になったので)&lt;/p&gt;
+
+&lt;p&gt;Cloudはデフォの6のままです。&lt;/p&gt;
+
+&lt;p&gt;パラメータは次のように設定しました。&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;left&#34;&gt;Parameter&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Value&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;Description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumWriteOperationsTotal&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;262144&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Total number of write operations to be performed on the service.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumOutstandingWriteOperations&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;64&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Number of write operations sent to the service at any given time.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumReadOperationsTotal&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;524288&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Total number of read operations to be performed on the service.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumOutstandingReadOperations&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;16&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Number of read operations sent to the service at any given time.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;OperationDataSizeInBytes&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1024&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Size in bytes of the data associated with each operation (i.e. read or write) performed on the service.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumItems&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2048&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Number of items (e.g. number of rows in a table) that the operations are distributed across in the service.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;NumClients&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Number of clients used to perform the operations on the service.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;NumOutstandingWriteOperations が64の場合、64個のタスクが生成されて並行に操作がNumWriteOperationsTotal回実行されます。Readのほうもしかり。&lt;/p&gt;
+
+&lt;h2 id=&#34;計測結果&#34;&gt;計測結果&lt;/h2&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;left&#34;&gt;&lt;/th&gt;
+&lt;th&gt;Test Case&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Time&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Operations&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;ava. Operaions [ope/sec]&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;ava. Operation Latency [ms]&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Local1&lt;/td&gt;
+&lt;td&gt;Write&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:01:45.9455085&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;262144&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2474.32858373604&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;25.8481560119629&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Local1&lt;/td&gt;
+&lt;td&gt;Read&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:01:04.9925570&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;524288&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;8066.89295206527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.9822887878418&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Local2&lt;/td&gt;
+&lt;td&gt;Write&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:02:33.0721881&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;262144&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2474.32858373604&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;37.3323948471069&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Local2&lt;/td&gt;
+&lt;td&gt;Read&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:01:27.1474273&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;524288&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6016.10416100029&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.65598070163727&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Cloud&lt;/td&gt;
+&lt;td&gt;Write&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:04:04.4822671&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;262144&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1072.24136584424&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;59.5640092216492&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;Cloud&lt;/td&gt;
+&lt;td&gt;Read&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;00:03:24.7382677&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;524288&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2560.7718864176&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.24372196731567&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;考察&#34;&gt;考察&lt;/h2&gt;
+
+&lt;p&gt;これから、友達と鍋パなので手短に！
+Local2がLocal1より時間かかったのはやっぱり、マシン一台なのにパーティション切ったのがいけないかなと。
+全体的にやっぱり、書き込みが遅いですね。&lt;a href=&#34;https://iwate.github.io/post/service-fabric-2/&#34;&gt;前に計測したとき&lt;/a&gt;はヘッダに時間がかかってそうで、１件ずつとかかなり遅いって感じでした。
+今回のサンプルでは最初の一件目にどれだけかかってるか出てないし、クラスタのVMSizeが異なるので素直に比較はできませんが、100k件が32880[ms]だったので、&lt;/p&gt;
+
+&lt;p&gt;32880 * 2.62144 = 86192.9472 = 00:01:26.1929472&lt;/p&gt;
+
+&lt;p&gt;という感じでしょうか。今回は、リバースプロキシなどを経由している点を考慮すると前回とった結果とあんまり変わらなさそうです。&lt;/p&gt;
+
+&lt;p&gt;Cloudですごく結果が悪く見えます。Av2のCPUはDv2と同じなので、メモリかネットワークですかね。Localの時みたいにPatitionが分かれすぎってのもあるかも。&lt;/p&gt;
+
+&lt;p&gt;今、Reliable Collection回りは中の人が頑張って書き直しいるそうなので（ほんとか？）、SDK上がるたびに計測できるようにいい感じの計測サービスを準備しておきたい今日この頃です。&lt;/p&gt;
+
+&lt;p&gt;以上！結果書いただけかよ！って感じですが２４日目でした！&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Service Fabric Local Clusterのリバースプロキシのポートは19081|19083|19085|19087|19089</title>
