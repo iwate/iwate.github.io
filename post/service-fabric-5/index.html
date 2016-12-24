@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Service Fabric Performance and Scalability samplesの結果を見る | //iwate.github.io</title>
     
-    <meta name="description" content="これはAzure AdventCalender 24日目です。 今回は、Service Fabric Performance and Scalability samplesを実行してみて、その結果を見てみたいと思います。
-Service Fabric Performance and Scalability samples Service Fabricのサンプルの一つで、最近出ました。このサンプルでは、Reliable DictionaryとActorのそれぞれReadWriteの時間を計測できます。 今回は、Reliable Dictionaryを計測します。
-この計測の流れは、クライアントがLoadDriverと呼ばれるサービスに計測リクエストをなげて、LoadDriverがSatefullServiceとのやり取りを行って計測して、結果をクライアントが受け取るというコードになってます。
-このサンプルで面白いなと思ったのは、WcfCommunicationListenerを使ってFabricClientがサービスとやり取りをしているところです。 WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&hellip;」って思ったのですが、なるほどこんな風に使うんですね。
-計測環境 次の2つの環境で計測しました。
-    SF Version CPU Memory Nodes Machines Partitions     Local1  Intel® core™ i5-6500 @ 3.2 GHz 16GB 5 1 1   Local2  Intel® core™ i5-6500 @ 3.2 GHz 16GB 5 1 4   Cloud  Intel® Xeon™ E5-2673 v3 @ 2." />
+    <meta name="description" content="これはAzure AdventCalender 24日目です。 今回は、Service Fabric Performance and Scalability samplesを実行してみて、その結果を見てみたいと思います。 " />
     <meta name="keywords" content="service fabric,performance" />
     
     <link rel="stylesheet" href="/css/style.css">
@@ -63,10 +58,9 @@ Service Fabric Performance and Scalability samples Service Fabricのサンプル
         <h2 class="subtitle is-6">December 23, 2016</h2>
         <h1 class="title">Service Fabric Performance and Scalability samplesの結果を見る</h1>
         <div class="content">
-          
-
-<p>これはAzure AdventCalender 24日目です。
-今回は、<a href="https://github.com/Azure-Samples/service-fabric-dotnet-performance">Service Fabric Performance and Scalability samples</a>を実行してみて、その結果を見てみたいと思います。</p>
+          <p>これは<a href="http://qiita.com/advent-calendar/2016/azure">Azure AdventCalender</a> 24日目です。
+今回は、<a href="https://github.com/Azure-Samples/service-fabric-dotnet-performance">Service Fabric Performance and Scalability samples</a>を実行してみて、その結果を見てみたいと思います。
+</p>
 
 <h2 id="service-fabric-performance-and-scalability-samples">Service Fabric Performance and Scalability samples</h2>
 
@@ -277,7 +271,6 @@ Local2がLocal1より時間かかったのはやっぱり、マシン一台な�
 <p>今、Reliable Collection回りは中の人が頑張って書き直しいるそうなので（ほんとか？）、SDK上がるたびに計測できるようにいい感じの計測サービスを準備しておきたい今日この頃です。</p>
 
 <p>以上！結果書いただけかよ！って感じですが２４日目でした！</p>
-
         </div>
       </div>
     </section>

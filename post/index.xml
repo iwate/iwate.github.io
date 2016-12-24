@@ -16,10 +16,9 @@
       <pubDate>Fri, 23 Dec 2016 19:00:59 +0900</pubDate>
       
       <guid>https://iwate.github.io/post/service-fabric-5/</guid>
-      <description>
-
-&lt;p&gt;これはAzure AdventCalender 24日目です。
-今回は、&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-performance&#34;&gt;Service Fabric Performance and Scalability samples&lt;/a&gt;を実行してみて、その結果を見てみたいと思います。&lt;/p&gt;
+      <description>&lt;p&gt;これは&lt;a href=&#34;http://qiita.com/advent-calendar/2016/azure&#34;&gt;Azure AdventCalender&lt;/a&gt; 24日目です。
+今回は、&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-performance&#34;&gt;Service Fabric Performance and Scalability samples&lt;/a&gt;を実行してみて、その結果を見てみたいと思います。
+&lt;/p&gt;
 
 &lt;h2 id=&#34;service-fabric-performance-and-scalability-samples&#34;&gt;Service Fabric Performance and Scalability samples&lt;/h2&gt;
 
@@ -229,8 +228,7 @@ Local2がLocal1より時間かかったのはやっぱり、マシン一台な�
 
 &lt;p&gt;今、Reliable Collection回りは中の人が頑張って書き直しいるそうなので（ほんとか？）、SDK上がるたびに計測できるようにいい感じの計測サービスを準備しておきたい今日この頃です。&lt;/p&gt;
 
-&lt;p&gt;以上！結果書いただけかよ！って感じですが２４日目でした！&lt;/p&gt;
-</description>
+&lt;p&gt;以上！結果書いただけかよ！って感じですが２４日目でした！&lt;/p&gt;</description>
     </item>
     
     <item>
