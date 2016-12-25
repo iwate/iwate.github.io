@@ -16,7 +16,7 @@
       <pubDate>Fri, 23 Dec 2016 19:00:59 +0900</pubDate>
       
       <guid>https://iwate.github.io/post/service-fabric-5/</guid>
-      <description>&lt;p&gt;これは&lt;a href=&#34;http://qiita.com/advent-calendar/2016/azure&#34;&gt;Azure AdventCalender&lt;/a&gt; 24日目です。
+      <description>&lt;p&gt;これは&lt;a href=&#34;http://qiita.com/advent-calendar/2016/azure&#34;&gt;Azure AdventCalendar&lt;/a&gt; 24日目です。
 今回は、&lt;a href=&#34;https://github.com/Azure-Samples/service-fabric-dotnet-performance&#34;&gt;Service Fabric Performance and Scalability samples&lt;/a&gt;を実行してみて、その結果を見てみたいと思います。
 &lt;/p&gt;
 
@@ -50,7 +50,7 @@ WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&amp;hel
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;Local1&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;5.4.145.9494&lt;/td&gt;
 &lt;td&gt;Intel® core™ i5-6500 @ 3.2 GHz&lt;/td&gt;
 &lt;td&gt;16GB&lt;/td&gt;
 &lt;td&gt;5&lt;/td&gt;
@@ -60,7 +60,7 @@ WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&amp;hel
 
 &lt;tr&gt;
 &lt;td&gt;Local2&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;5.4.145.9494&lt;/td&gt;
 &lt;td&gt;Intel® core™ i5-6500 @ 3.2 GHz&lt;/td&gt;
 &lt;td&gt;16GB&lt;/td&gt;
 &lt;td&gt;5&lt;/td&gt;
@@ -70,7 +70,7 @@ WcfCommunicationListenerを初めて聞いたとき、「いまさらWCF&amp;hel
 
 &lt;tr&gt;
 &lt;td&gt;Cloud&lt;/td&gt;
-&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;5.4.145.9494&lt;/td&gt;
 &lt;td&gt;Intel® Xeon™ E5-2673 v3 @ 2.4 GHz&lt;/td&gt;
 &lt;td&gt;4GB&lt;/td&gt;
 &lt;td&gt;5&lt;/td&gt;
